@@ -22,7 +22,7 @@ CREATE TABLE users_roles (
 
 insert into roles (name)
 values
-('ROLE_USER'), ('ROLE_ADMIN');
+('ROLE_USER'), ('ROLE_ADMIN');      -- // Roles to be used without the "ROLE_" prefix in the project
 
 insert into users (username, password, email)
 values
