@@ -2,7 +2,8 @@ package com.example.spring.security_jwt.entities;
 
 import java.util.Collection;
 
-import jakarta.persistence.*;
+import javax.persistence.*;
+
 import lombok.Data;
 
 @Entity
