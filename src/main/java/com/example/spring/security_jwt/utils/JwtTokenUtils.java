@@ -6,6 +6,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -20,6 +21,7 @@ import io.jsonwebtoken.security.Keys;
 @Component
 public class JwtTokenUtils {
     private static final String ROLES_CLAIM = "roles";
+    private static final int SIGNING_KEY_LENGTH = 32;
 
     @Value("${jwt.secret}")
     private String secret;
@@ -28,7 +30,8 @@ public class JwtTokenUtils {
     private Duration jwtLifetime;
 
     private SecretKey getSigningKey() {
-        return Keys.hmacShaKeyFor(secret.getBytes());
+        byte[] keyBytes = Arrays.copyOf(secret.getBytes(), SIGNING_KEY_LENGTH);
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 
     public String generateToken(UserDetails userDetails) {
