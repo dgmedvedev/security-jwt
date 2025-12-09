@@ -1,8 +1,6 @@
 package com.example.spring.security_jwt.dtos
 
-data class RegistrationUserDto(
+data class JwtRequestDto(
     val username: String,
     val password: String,
-    val confirmPassword: String,
-    val email: String,
 )

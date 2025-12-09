@@ -1,7 +1,7 @@
 package com.example.spring.security_jwt.controllers;
 
-import com.example.spring.security_jwt.dtos.JwtRequest;
-import com.example.spring.security_jwt.dtos.JwtResponse;
+import com.example.spring.security_jwt.dtos.JwtRequestDto;
+import com.example.spring.security_jwt.dtos.JwtResponseDto;
 import com.example.spring.security_jwt.exceptions.AppError;
 import com.example.spring.security_jwt.services.UserService;
 import com.example.spring.security_jwt.utils.JwtTokenUtils;
@@ -26,7 +26,7 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
 
     @PostMapping("/auth")
-    public ResponseEntity<?> createAuthToken(@RequestBody JwtRequest authRequest) {
+    public ResponseEntity<?> createAuthToken(@RequestBody JwtRequestDto authRequest) {
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
@@ -44,6 +44,6 @@ public class AuthController {
         }
         UserDetails userDetails = userService.loadUserByUsername(authRequest.getUsername());
         String token = jwtTokenUtils.generateToken(userDetails);
-        return ResponseEntity.ok(new JwtResponse(token));
+        return ResponseEntity.ok(new JwtResponseDto(token));
     }
 }
