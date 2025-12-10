@@ -2,7 +2,6 @@ package com.example.spring.security_jwt.services;
 
 import com.example.spring.security_jwt.dtos.RegistrationUserDto;
 import com.example.spring.security_jwt.entities.User;
-import com.example.spring.security_jwt.repositories.RoleRepository;
 import com.example.spring.security_jwt.repositories.UserRepository;
 
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -23,7 +22,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
+    private final RoleService roleService;
     private final PasswordEncoder passwordEncoder;
 
     public Optional<User> findByUsername(String username) {
@@ -39,7 +38,10 @@ public class UserService implements UserDetailsService {
         return new org.springframework.security.core.userdetails.User(
                 user.getUsername(),
                 user.getPassword(),
-                user.getRoles().stream().map(role -> new SimpleGrantedAuthority(role.getName())).collect(Collectors.toList())
+                user.getRoles()
+                        .stream()
+                        .map(role -> new SimpleGrantedAuthority(role.getName()))
+                        .collect(Collectors.toList())
         );
     }
 
@@ -48,7 +50,7 @@ public class UserService implements UserDetailsService {
         user.setUsername(registrationUserDto.getUsername());
         user.setPassword(passwordEncoder.encode(registrationUserDto.getPassword()));
         user.setEmail(registrationUserDto.getEmail());
-        roleRepository.findByName("ROLE_USER").ifPresent(role -> user.setRoles(List.of(role)));
+        user.setRoles(List.of(roleService.getUserRole()));
         return userRepository.save(user);
     }
 }
