@@ -15,21 +15,45 @@ class JwtTokenUtils {
     @Value(JWT_SECRET_PROPERTY)
     private lateinit var secret: String
 
-    @Value(JWT_LIFETIME_PROPERTY)
-    private lateinit var jwtLifetime: Duration
+    @Value(ACCESS_TOKEN_LIFETIME_PROPERTY)
+    private lateinit var accessTokenLifetime: Duration
+
+    @Value(REFRESH_TOKEN_LIFETIME_PROPERTY)
+    private lateinit var refreshTokenLifetime: Duration
 
     private fun getSigningKey(): SecretKey {
         val keyBytes = secret.toByteArray(Charsets.UTF_8)
         return Keys.hmacShaKeyFor(keyBytes)
     }
 
-    fun generateToken(userDetails: UserDetails): String {
+    fun generateAccessToken(userDetails: UserDetails): String {
+        return generateToken(
+            userDetails = userDetails,
+            tokenType = ACCESS_TOKEN_TYPE,
+            tokenLifetime = accessTokenLifetime,
+        )
+    }
+
+    fun generateRefreshToken(userDetails: UserDetails): String {
+        return generateToken(
+            userDetails = userDetails,
+            tokenType = REFRESH_TOKEN_TYPE,
+            tokenLifetime = refreshTokenLifetime,
+        )
+    }
+
+    private fun generateToken(
+        userDetails: UserDetails,
+        tokenType: String,
+        tokenLifetime: Duration,
+    ): String {
         val claims: MutableMap<String, Any> = HashMap()
         val rolesList = userDetails.authorities.map { it.authority }
         claims[ROLES_CLAIM] = rolesList
+        claims[TOKEN_TYPE_CLAIM] = tokenType
 
         val issuedDate = Date()
-        val expiredDate = Date(issuedDate.time + jwtLifetime.toMillis())
+        val expiredDate = Date(issuedDate.time + tokenLifetime.toMillis())
 
         return Jwts.builder()
             .claims(claims)
@@ -50,6 +74,14 @@ class JwtTokenUtils {
         return rolesObject.map { it.toString() }
     }
 
+    fun isAccessToken(token: String): Boolean {
+        return getAllClaimsFromToken(token)[TOKEN_TYPE_CLAIM] == ACCESS_TOKEN_TYPE
+    }
+
+    fun isRefreshToken(token: String): Boolean {
+        return getAllClaimsFromToken(token)[TOKEN_TYPE_CLAIM] == REFRESH_TOKEN_TYPE
+    }
+
     private fun getAllClaimsFromToken(token: String): Claims {
         return Jwts.parser()
             .verifyWith(getSigningKey())
@@ -60,7 +92,11 @@ class JwtTokenUtils {
 
     companion object {
         private const val ROLES_CLAIM = "roles"
+        private const val TOKEN_TYPE_CLAIM = "token_type"
+        private const val ACCESS_TOKEN_TYPE = "access"
+        private const val REFRESH_TOKEN_TYPE = "refresh"
         private const val JWT_SECRET_PROPERTY = "\${jwt.secret}"
-        private const val JWT_LIFETIME_PROPERTY = "\${jwt.lifetime}"
+        private const val ACCESS_TOKEN_LIFETIME_PROPERTY = "\${jwt.access-token-lifetime}"
+        private const val REFRESH_TOKEN_LIFETIME_PROPERTY = "\${jwt.refresh-token-lifetime}"
     }
 }

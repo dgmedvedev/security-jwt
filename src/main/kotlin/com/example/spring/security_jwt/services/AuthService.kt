@@ -2,8 +2,10 @@ package com.example.spring.security_jwt.services
 
 import com.example.spring.security_jwt.dtos.JwtRequestDto
 import com.example.spring.security_jwt.dtos.JwtResponseDto
+import com.example.spring.security_jwt.dtos.RefreshTokenRequestDto
 import com.example.spring.security_jwt.dtos.RegistrationUserDto
 import com.example.spring.security_jwt.exceptions.AppError
+import io.jsonwebtoken.JwtException
 import com.example.spring.security_jwt.mappers.toDto
 import com.example.spring.security_jwt.utils.JwtTokenUtils
 import org.springframework.http.HttpStatus
@@ -29,11 +31,38 @@ class AuthService(
                 )
             )
             val userDetails: UserDetails = userService.loadUserByUsername(authRequest.username)
-            val token = jwtTokenUtils.generateToken(userDetails)
-            ResponseEntity.ok(JwtResponseDto(token))
+            val accessToken = jwtTokenUtils.generateAccessToken(userDetails)
+            val refreshToken = jwtTokenUtils.generateRefreshToken(userDetails)
+            ResponseEntity.ok(JwtResponseDto(accessToken = accessToken, refreshToken = refreshToken))
         } catch (e: BadCredentialsException) {
             ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(AppError(HttpStatus.UNAUTHORIZED.value(), "Invalid username or password"))
+        }
+    }
+
+    fun refreshAuthToken(refreshRequest: RefreshTokenRequestDto): ResponseEntity<*> {
+        return try {
+            val refreshToken = refreshRequest.refreshToken
+            if (!jwtTokenUtils.isRefreshToken(refreshToken)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(AppError(HttpStatus.UNAUTHORIZED.value(), "Invalid refresh token"))
+            }
+            val username = jwtTokenUtils.getUsername(refreshToken)
+            val userDetails = userService.loadUserByUsername(username)
+            val newAccessToken = jwtTokenUtils.generateAccessToken(userDetails)
+            val newRefreshToken = jwtTokenUtils.generateRefreshToken(userDetails)
+            ResponseEntity.ok(
+                JwtResponseDto(
+                    accessToken = newAccessToken,
+                    refreshToken = newRefreshToken,
+                )
+            )
+        } catch (e: JwtException) {
+            ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(AppError(HttpStatus.UNAUTHORIZED.value(), "Refresh token expired or invalid"))
+        } catch (e: Exception) {
+            ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(AppError(HttpStatus.UNAUTHORIZED.value(), "Refresh token authentication failed"))
         }
     }
 

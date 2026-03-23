@@ -4,7 +4,8 @@ server:
     context-path: /demo
 jwt:
   secret: 984hg493gh0439rthr0429uruj2309yh937gc763fe87t3f89723gf  # A random set of characters
-  lifetime: 30m
+  access-token-lifetime: 30m
+  refresh-token-lifetime: 7d
 spring:
   datasource:
     driver-class-name: org.h2.Driver

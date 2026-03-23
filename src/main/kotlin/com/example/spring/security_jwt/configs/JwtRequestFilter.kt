@@ -41,6 +41,10 @@ class JwtRequestFilter(
         }
 
         if (username != null && jwt != null && SecurityContextHolder.getContext().authentication == null) {
+            if (!jwtTokenUtils.isAccessToken(jwt)) {
+                filterChain.doFilter(request, response)
+                return
+            }
             val token = UsernamePasswordAuthenticationToken(
                 username,
                 null,
